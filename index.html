@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Latihan Website Sekolah - Drag & Drop Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        
+        .drag-item {
+            cursor: grab;
+            transition: all 0.3s ease;
+        }
+        
+        .drag-item:active {
+            cursor: grabbing;
+            transform: rotate(5deg);
+        }
+        
+        .drop-zone {
+            min-height: 60px;
+            border: 2px dashed #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        
+        .drop-zone.drag-over {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        
+        .menu-item {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .menu-item:hover .delete-btn {
+            opacity: 1;
+        }
+        
+        .delete-btn {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .preview-frame {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .code-editor {
+            font-family: 'Courier New', monospace;
+            background: #1f2937;
+            color: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .success-animation {
+            animation: successPulse 0.6s ease-out;
+        }
+        
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Header -->
+    <header class="gradient-bg text-white py-6 px-4 shadow-lg">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold">🏫 Dashboard Website Builder</h1>
+                    <p class="text-blue-100 mt-1">Latihan Membuat Website Sekolah dengan Drag & Drop</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+                        <span class="text-sm">👨‍🎓 Mode: Siswa</span>
+                    </div>
+                    <button onclick="saveProgress()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg font-semibold transition-colors">
+                        💾 Simpan Progress
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto p-4">
+        <!-- Tutorial Panel -->
+        <div id="tutorial-panel" class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
+            <div class="flex items-start space-x-3">
+                <div class="text-2xl">💡</div>
+                <div>
+                    <h3 class="font-bold text-blue-800 mb-2">Cara Menggunakan Builder:</h3>
+                    <ol class="text-sm text-blue-700 space-y-1">
+                        <li>1. Drag komponen dari panel kiri ke area "Menu Website"</li>
+                        <li>2. Klik komponen untuk mengedit konten</li>
+                        <li>3. Lihat preview real-time di panel kanan</li>
+                        <li>4. Klik "Ekspor HTML" untuk menyimpan website</li>
+                    </ol>
+                </div>
+                <button onclick="closeTutorial()" class="text-blue-500 hover:text-blue-700 ml-auto">✕</button>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-12 gap-6">
+            <!-- Left Panel - Components -->
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-xl shadow-lg p-6 sticky top-4">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="text-2xl mr-2">🧩</span>
+                        Komponen Website
+                    </h2>
+                    
+                    <div class="space-y-3">
+                        <!-- Header Component -->
+                        <div class="drag-item bg-gradient-to-r from-blue-100 to-blue-200 p-3 rounded-lg border-2 border-blue-300" 
+                             draggable="true" 
+                             data-component="header">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xl">🏠</span>
+                                <div>
+                                    <div class="font-semibold text-sm">Header Sekolah</div>
+                                    <div class="text-xs text-gray-600">Logo + Nama Sekolah</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Component -->
+                        <div class="drag-item bg-gradient-to-r from-green-100 to-green-200 p-3 rounded-lg border-2 border-green-300" 
+                             draggable="true" 
+                             data-component="navigation">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xl">📋</span>
+                                <div>
+                                    <div class="font-semibold text-sm">Menu Navigasi</div>
+                                    <div class="text-xs text-gray-600">Menu utama website</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hero Section -->
+                        <div class="drag-item bg-gradient-to-r from-purple-100 to-purple-200 p-3 rounded-lg border-2 border-purple-300" 
+                             draggable="true" 
+                             data-component="hero">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xl">🌟</span>
+                                <div>
+                                    <div class="font-semibold text-sm">Hero Section</div>
+                                    <div class="text-xs text-gray-600">Banner utama</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- About Section -->
+                        <div class="drag-item bg-gradient-to-r from-yellow-100 to-yellow-200 p-3 rounded-lg border-2 border-yellow-300" 
+                             draggable="true" 
+                             data-component="about">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xl">📖</span>
+                                <div>
+                                    <div class="font-semibold text-sm">Tentang Sekolah</div>
+                                    <div class="text-xs text-gray-600">Profil & sejarah</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- News Section -->
+                        <div class="drag-item bg-gradient-to-r from-red-100 to-red-200 p-3 rounded-lg border-2 border-red-300" 
+                             draggable="true" 
+                             data-component="news">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xl">📰</span>
+                                <div>
+                                    <div class="font-semibold text-sm">Berita Sekolah</div>
+                                    <div class="text-xs text-gray-600">Artikel & pengumuman</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gallery Section -->
+                        <div class="drag-item bg-gradient-to-r from-pink-100 to-pink-200 p-3 rounded-lg border-2 border-pink-300" 
+                             draggable="true" 
+                             data-component="gallery">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xl">🖼️</span>
+                                <div>
+                                    <div class="font-semibold text-sm">Galeri Foto</div>
+                                    <div class="text-xs text-gray-600">Koleksi gambar</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Section -->
+                        <div class="drag-item bg-gradient-to-r from-teal-100 to-teal-200 p-3 rounded-lg border-2 border-teal-300" 
+                             draggable="true" 
+                             data-component="contact">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xl">📞</span>
+                                <div>
+                                    <div class="font-semibold text-sm">Kontak</div>
+                                    <div class="text-xs text-gray-600">Informasi kontak</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer Section -->
+                        <div class="drag-item bg-gradient-to-r from-gray-100 to-gray-200 p-3 rounded-lg border-2 border-gray-300" 
+                             draggable="true" 
+                             data-component="footer">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xl">🔗</span>
+                                <div>
+                                    <div class="font-semibold text-sm">Footer</div>
+                                    <div class="text-xs text-gray-600">Bagian bawah website</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="mt-6 pt-4 border-t border-gray-200">
+                        <h3 class="font-semibold text-gray-800 mb-3">⚡ Aksi Cepat</h3>
+                        <div class="space-y-2">
+                            <button onclick="clearAll()" class="w-full bg-red-100 hover:bg-red-200 text-red-700 py-2 px-3 rounded-lg text-sm font-medium transition-colors">
+                                🗑️ Hapus Semua
+                            </button>
+                            <button onclick="loadTemplate()" class="w-full bg-blue-100 hover:bg-blue-200 text-blue-700 py-2 px-3 rounded-lg text-sm font-medium transition-colors">
+                                📋 Load Template
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Panel - Builder -->
+            <div class="lg:col-span-5">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                            <span class="text-2xl mr-2">🏗️</span>
+                            Menu Website
+                        </h2>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-gray-600">Komponen: </span>
+                            <span id="component-count" class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-semibold">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Drop Zone -->
+                    <div id="drop-zone" class="drop-zone rounded-lg p-6 min-h-96">
+                        <div id="empty-state" class="text-center text-gray-400 py-12">
+                            <div class="text-6xl mb-4">📱</div>
+                            <h3 class="text-lg font-semibold mb-2">Mulai Membangun Website</h3>
+                            <p class="text-sm">Drag komponen dari panel kiri ke sini untuk memulai</p>
+                        </div>
+                        
+                        <div id="website-components" class="space-y-4 hidden">
+                            <!-- Components will be added here -->
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                        <div class="flex items-center space-x-2">
+                            <button onclick="previewWebsite()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                                👁️ Preview
+                            </button>
+                            <button onclick="exportHTML()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                                💾 Ekspor HTML
+                            </button>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <span id="last-saved">Belum disimpan</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Preview -->
+            <div class="lg:col-span-4">
+                <div class="bg-white rounded-xl shadow-lg p-6 sticky top-4">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="text-2xl mr-2">👁️</span>
+                        Live Preview
+                    </h2>
+                    
+                    <div class="preview-frame h-96 overflow-y-auto p-4">
+                        <div id="preview-content" class="text-center text-gray-400 py-12">
+                            <div class="text-4xl mb-4">🖥️</div>
+                            <p class="text-sm">Preview akan muncul di sini</p>
+                        </div>
+                    </div>
+
+                    <!-- Preview Controls -->
+                    <div class="mt-4 flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <button onclick="refreshPreview()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition-colors">
+                                🔄 Refresh
+                            </button>
+                            <button onclick="toggleResponsive()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition-colors">
+                                📱 Mobile
+                            </button>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            Auto-update: <span class="text-green-600">ON</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="edit-modal-title" class="text-2xl font-bold text-gray-800">Edit Komponen</h3>
+                    <button onclick="closeEditModal()" class="text-gray-500 hover:text-gray-700 text-3xl">&times;</button>
+                </div>
+                <div id="edit-modal-content">
+                    <!-- Edit form will be loaded here -->
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button onclick="closeEditModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg transition-colors">
+                        Batal
+                    </button>
+                    <button onclick="saveEdit()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        Simpan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Toast -->
+    <div id="success-toast" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hidden z-50">
+        <div class="flex items-center space-x-2">
+            <span class="text-xl">✅</span>
+            <span id="toast-message">Berhasil disimpan!</span>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let websiteComponents = [];
+        let currentEditingComponent = null;
+        let componentCounter = 0;
+
+        // Component templates
+        const componentTemplates = {
+            header: {
+                name: 'Header Sekolah',
+                icon: '🏠',
+                html: `
+                    <header class="bg-blue-600 text-white py-6">
+                        <div class="container mx-auto px-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-blue-600 text-2xl font-bold">
+                                        S
+                                    </div>
+                                    <div>
+                                        <h1 class="text-2xl font-bold">[NAMA_SEKOLAH]</h1>
+                                        <p class="text-blue-200">[MOTTO_SEKOLAH]</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+                `,
+                fields: {
+                    nama_sekolah: 'SMP Negeri 1 Jakarta',
+                    motto_sekolah: 'Cerdas, Berkarakter, Berprestasi'
+                }
+            },
+            navigation: {
+                name: 'Menu Navigasi',
+                icon: '📋',
+                html: `
+                    <nav class="bg-white shadow-md">
+                        <div class="container mx-auto px-4">
+                            <div class="flex items-center justify-center py-4">
+                                <ul class="flex space-x-8">
+                                    <li><a href="#" class="text-gray-700 hover:text-blue-600 font-medium">[MENU_1]</a></li>
+                                    <li><a href="#" class="text-gray-700 hover:text-blue-600 font-medium">[MENU_2]</a></li>
+                                    <li><a href="#" class="text-gray-700 hover:text-blue-600 font-medium">[MENU_3]</a></li>
+                                    <li><a href="#" class="text-gray-700 hover:text-blue-600 font-medium">[MENU_4]</a></li>
+                                    <li><a href="#" class="text-gray-700 hover:text-blue-600 font-medium">[MENU_5]</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </nav>
+                `,
+                fields: {
+                    menu_1: 'Beranda',
+                    menu_2: 'Tentang',
+                    menu_3: 'Berita',
+                    menu_4: 'Galeri',
+                    menu_5: 'Kontak'
+                }
+            },
+            hero: {
+                name: 'Hero Section',
+                icon: '🌟',
+                html: `
+                    <section class="bg-gradient-to-r from-blue-500 to-purple-600 text-white py-20">
+                        <div class="container mx-auto px-4 text-center">
+                            <h2 class="text-4xl md:text-6xl font-bold mb-6">[JUDUL_HERO]</h2>
+                            <p class="text-xl mb-8 max-w-2xl mx-auto">[DESKRIPSI_HERO]</p>
+                            <button class="bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors">
+                                [TOMBOL_HERO]
+                            </button>
+                        </div>
+                    </section>
+                `,
+                fields: {
+                    judul_hero: 'Selamat Datang di Sekolah Kami',
+                    deskripsi_hero: 'Tempat terbaik untuk mengembangkan potensi dan meraih prestasi gemilang',
+                    tombol_hero: 'Pelajari Lebih Lanjut'
+                }
+            },
+            about: {
+                name: 'Tentang Sekolah',
+                icon: '📖',
+                html: `
+                    <section class="py-16 bg-gray-50">
+                        <div class="container mx-auto px-4">
+                            <div class="text-center mb-12">
+                                <h2 class="text-3xl font-bold text-gray-800 mb-4">[JUDUL_ABOUT]</h2>
+                                <p class="text-lg text-gray-600 max-w-3xl mx-auto">[DESKRIPSI_ABOUT]</p>
+                            </div>
+                            <div class="grid md:grid-cols-3 gap-8">
+                                <div class="text-center">
+                                    <div class="text-4xl mb-4">🎓</div>
+                                    <h3 class="text-xl font-semibold mb-2">[FITUR_1]</h3>
+                                    <p class="text-gray-600">[DESKRIPSI_FITUR_1]</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-4xl mb-4">👨‍🏫</div>
+                                    <h3 class="text-xl font-semibold mb-2">[FITUR_2]</h3>
+                                    <p class="text-gray-600">[DESKRIPSI_FITUR_2]</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-4xl mb-4">🏆</div>
+                                    <h3 class="text-xl font-semibold mb-2">[FITUR_3]</h3>
+                                    <p class="text-gray-600">[DESKRIPSI_FITUR_3]</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                `,
+                fields: {
+                    judul_about: 'Tentang Sekolah Kami',
+                    deskripsi_about: 'Sekolah yang berkomitmen memberikan pendidikan berkualitas dengan fasilitas modern dan tenaga pengajar profesional.',
+                    fitur_1: 'Kurikulum Modern',
+                    deskripsi_fitur_1: 'Kurikulum yang disesuaikan dengan perkembangan zaman',
+                    fitur_2: 'Guru Berkualitas',
+                    deskripsi_fitur_2: 'Tenaga pengajar berpengalaman dan profesional',
+                    fitur_3: 'Prestasi Gemilang',
+                    deskripsi_fitur_3: 'Berbagai prestasi akademik dan non-akademik'
+                }
+            },
+            news: {
+                name: 'Berita Sekolah',
+                icon: '📰',
+                html: `
+                    <section class="py-16">
+                        <div class="container mx-auto px-4">
+                            <div class="text-center mb-12">
+                                <h2 class="text-3xl font-bold text-gray-800 mb-4">[JUDUL_NEWS]</h2>
+                                <p class="text-lg text-gray-600">[DESKRIPSI_NEWS]</p>
+                            </div>
+                            <div class="grid md:grid-cols-3 gap-8">
+                                <article class="bg-white rounded-lg shadow-md overflow-hidden">
+                                    <div class="h-48 bg-blue-200 flex items-center justify-center text-4xl">📚</div>
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-semibold mb-2">[BERITA_1]</h3>
+                                        <p class="text-gray-600 text-sm mb-4">[TANGGAL_1]</p>
+                                        <p class="text-gray-700">[RINGKASAN_1]</p>
+                                    </div>
+                                </article>
+                                <article class="bg-white rounded-lg shadow-md overflow-hidden">
+                                    <div class="h-48 bg-green-200 flex items-center justify-center text-4xl">🏆</div>
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-semibold mb-2">[BERITA_2]</h3>
+                                        <p class="text-gray-600 text-sm mb-4">[TANGGAL_2]</p>
+                                        <p class="text-gray-700">[RINGKASAN_2]</p>
+                                    </div>
+                                </article>
+                                <article class="bg-white rounded-lg shadow-md overflow-hidden">
+                                    <div class="h-48 bg-purple-200 flex items-center justify-center text-4xl">🎉</div>
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-semibold mb-2">[BERITA_3]</h3>
+                                        <p class="text-gray-600 text-sm mb-4">[TANGGAL_3]</p>
+                                        <p class="text-gray-700">[RINGKASAN_3]</p>
+                                    </div>
+                                </article>
+                            </div>
+                        </div>
+                    </section>
+                `,
+                fields: {
+                    judul_news: 'Berita Terkini',
+                    deskripsi_news: 'Informasi terbaru seputar kegiatan sekolah',
+                    berita_1: 'Penerimaan Siswa Baru 2024',
+                    tanggal_1: '15 Januari 2024',
+                    ringkasan_1: 'Pendaftaran siswa baru telah dibuka dengan berbagai program unggulan.',
+                    berita_2: 'Juara Olimpiade Matematika',
+                    tanggal_2: '10 Januari 2024',
+                    ringkasan_2: 'Siswa kami meraih juara 1 olimpiade matematika tingkat provinsi.',
+                    berita_3: 'Festival Seni Budaya',
+                    tanggal_3: '5 Januari 2024',
+                    ringkasan_3: 'Acara tahunan festival seni budaya akan segera diselenggarakan.'
+                }
+            },
+            gallery: {
+                name: 'Galeri Foto',
+                icon: '🖼️',
+                html: `
+                    <section class="py-16 bg-gray-50">
+                        <div class="container mx-auto px-4">
+                            <div class="text-center mb-12">
+                                <h2 class="text-3xl font-bold text-gray-800 mb-4">[JUDUL_GALLERY]</h2>
+                                <p class="text-lg text-gray-600">[DESKRIPSI_GALLERY]</p>
+                            </div>
+                            <div class="grid md:grid-cols-4 gap-4">
+                                <div class="bg-blue-200 h-48 rounded-lg flex items-center justify-center text-4xl">🏫</div>
+                                <div class="bg-green-200 h-48 rounded-lg flex items-center justify-center text-4xl">📚</div>
+                                <div class="bg-yellow-200 h-48 rounded-lg flex items-center justify-center text-4xl">🎨</div>
+                                <div class="bg-purple-200 h-48 rounded-lg flex items-center justify-center text-4xl">⚽</div>
+                                <div class="bg-pink-200 h-48 rounded-lg flex items-center justify-center text-4xl">🎭</div>
+                                <div class="bg-indigo-200 h-48 rounded-lg flex items-center justify-center text-4xl">🔬</div>
+                                <div class="bg-red-200 h-48 rounded-lg flex items-center justify-center text-4xl">🎵</div>
+                                <div class="bg-teal-200 h-48 rounded-lg flex items-center justify-center text-4xl">🏆</div>
+                            </div>
+                        </div>
+                    </section>
+                `,
+                fields: {
+                    judul_gallery: 'Galeri Sekolah',
+                    deskripsi_gallery: 'Dokumentasi kegiatan dan fasilitas sekolah'
+                }
+            },
+            contact: {
+                name: 'Kontak',
+                icon: '📞',
+                html: `
+                    <section class="py-16">
+                        <div class="container mx-auto px-4">
+                            <div class="text-center mb-12">
+                                <h2 class="text-3xl font-bold text-gray-800 mb-4">[JUDUL_CONTACT]</h2>
+                                <p class="text-lg text-gray-600">[DESKRIPSI_CONTACT]</p>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-12">
+                                <div>
+                                    <h3 class="text-xl font-semibold mb-6">Informasi Kontak</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="text-2xl">📍</div>
+                                            <div>
+                                                <div class="font-semibold">Alamat</div>
+                                                <div class="text-gray-600">[ALAMAT]</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <div class="text-2xl">📞</div>
+                                            <div>
+                                                <div class="font-semibold">Telepon</div>
+                                                <div class="text-gray-600">[TELEPON]</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <div class="text-2xl">📧</div>
+                                            <div>
+                                                <div class="font-semibold">Email</div>
+                                                <div class="text-gray-600">[EMAIL]</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-semibold mb-6">Kirim Pesan</h3>
+                                    <form class="space-y-4">
+                                        <input type="text" placeholder="Nama Lengkap" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                        <input type="email" placeholder="Email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                        <textarea placeholder="Pesan" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"></textarea>
+                                        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">Kirim Pesan</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                `,
+                fields: {
+                    judul_contact: 'Hubungi Kami',
+                    deskripsi_contact: 'Jangan ragu untuk menghubungi kami',
+                    alamat: 'Jl. Pendidikan No. 123, Jakarta Pusat',
+                    telepon: '(021) 123-4567',
+                    email: 'info@sekolah.sch.id'
+                }
+            },
+            footer: {
+                name: 'Footer',
+                icon: '🔗',
+                html: `
+                    <footer class="bg-gray-800 text-white py-12">
+                        <div class="container mx-auto px-4">
+                            <div class="grid md:grid-cols-4 gap-8">
+                                <div>
+                                    <h3 class="text-xl font-bold mb-4">[NAMA_SEKOLAH_FOOTER]</h3>
+                                    <p class="text-gray-300">[DESKRIPSI_FOOTER]</p>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold mb-4">Menu Cepat</h4>
+                                    <ul class="space-y-2 text-gray-300">
+                                        <li><a href="#" class="hover:text-white">Beranda</a></li>
+                                        <li><a href="#" class="hover:text-white">Tentang</a></li>
+                                        <li><a href="#" class="hover:text-white">Berita</a></li>
+                                        <li><a href="#" class="hover:text-white">Kontak</a></li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold mb-4">Informasi</h4>
+                                    <ul class="space-y-2 text-gray-300">
+                                        <li>📍 [ALAMAT_FOOTER]</li>
+                                        <li>📞 [TELEPON_FOOTER]</li>
+                                        <li>📧 [EMAIL_FOOTER]</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold mb-4">Media Sosial</h4>
+                                    <div class="flex space-x-4">
+                                        <a href="#" class="text-2xl hover:text-blue-400">📘</a>
+                                        <a href="#" class="text-2xl hover:text-pink-400">📷</a>
+                                        <a href="#" class="text-2xl hover:text-blue-300">🐦</a>
+                                        <a href="#" class="text-2xl hover:text-red-400">📺</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                                <p>&copy; 2024 [NAMA_SEKOLAH_FOOTER]. All rights reserved.</p>
+                            </div>
+                        </div>
+                    </footer>
+                `,
+                fields: {
+                    nama_sekolah_footer: 'SMP Negeri 1 Jakarta',
+                    deskripsi_footer: 'Sekolah terdepan dalam memberikan pendidikan berkualitas untuk generasi masa depan.',
+                    alamat_footer: 'Jl. Pendidikan No. 123',
+                    telepon_footer: '(021) 123-4567',
+                    email_footer: 'info@sekolah.sch.id'
+                }
+            }
+        };
+
+        // Initialize drag and drop
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDragAndDrop();
+            updateComponentCount();
+        });
+
+        function initializeDragAndDrop() {
+            const dragItems = document.querySelectorAll('.drag-item');
+            const dropZone = document.getElementById('drop-zone');
+
+            dragItems.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+            });
+
+            dropZone.addEventListener('dragover', handleDragOver);
+            dropZone.addEventListener('drop', handleDrop);
+            dropZone.addEventListener('dragenter', handleDragEnter);
+            dropZone.addEventListener('dragleave', handleDragLeave);
+        }
+
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.dataset.component);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            if (!e.currentTarget.contains(e.relatedTarget)) {
+                e.currentTarget.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            const componentType = e.dataTransfer.getData('text/plain');
+            addComponent(componentType);
+        }
+
+        function addComponent(componentType) {
+            const template = componentTemplates[componentType];
+            if (!template) return;
+
+            const componentId = `component-${++componentCounter}`;
+            const component = {
+                id: componentId,
+                type: componentType,
+                name: template.name,
+                icon: template.icon,
+                fields: { ...template.fields }
+            };
+
+            websiteComponents.push(component);
+            renderComponent(component);
+            updatePreview();
+            updateComponentCount();
+            hideEmptyState();
+            
+            showToast(`${template.name} berhasil ditambahkan!`);
+        }
+
+        function renderComponent(component) {
+            const container = document.getElementById('website-components');
+            const componentElement = document.createElement('div');
+            componentElement.className = 'menu-item bg-gray-50 border-2 border-gray-200 rounded-lg p-4 fade-in';
+            componentElement.dataset.componentId = component.id;
+            
+            componentElement.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">${component.icon}</span>
+                        <div>
+                            <div class="font-semibold text-gray-800">${component.name}</div>
+                            <div class="text-sm text-gray-600">ID: ${component.id}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="editComponent('${component.id}')" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded text-sm transition-colors">
+                            ✏️ Edit
+                        </button>
+                        <button onclick="deleteComponent('${component.id}')" class="delete-btn bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-sm transition-colors">
+                            🗑️ Hapus
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(componentElement);
+        }
+
+        function editComponent(componentId) {
+            const component = websiteComponents.find(c => c.id === componentId);
+            if (!component) return;
+
+            currentEditingComponent = component;
+            const template = componentTemplates[component.type];
+            
+            document.getElementById('edit-modal-title').textContent = `Edit ${component.name}`;
+            
+            let formHTML = '<div class="space-y-4">';
+            
+            Object.keys(component.fields).forEach(fieldKey => {
+                const fieldLabel = fieldKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                formHTML += `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">${fieldLabel}</label>
+                        <input type="text" 
+                               id="field-${fieldKey}" 
+                               value="${component.fields[fieldKey]}" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                    </div>
+                `;
+            });
+            
+            formHTML += '</div>';
+            
+            document.getElementById('edit-modal-content').innerHTML = formHTML;
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function saveEdit() {
+            if (!currentEditingComponent) return;
+
+            Object.keys(currentEditingComponent.fields).forEach(fieldKey => {
+                const input = document.getElementById(`field-${fieldKey}`);
+                if (input) {
+                    currentEditingComponent.fields[fieldKey] = input.value;
+                }
+            });
+
+            updatePreview();
+            closeEditModal();
+            showToast('Komponen berhasil diperbarui!');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+            currentEditingComponent = null;
+        }
+
+        function deleteComponent(componentId) {
+            if (confirm('Apakah Anda yakin ingin menghapus komponen ini?')) {
+                websiteComponents = websiteComponents.filter(c => c.id !== componentId);
+                
+                const element = document.querySelector(`[data-component-id="${componentId}"]`);
+                if (element) {
+                    element.remove();
+                }
+                
+                updatePreview();
+                updateComponentCount();
+                
+                if (websiteComponents.length === 0) {
+                    showEmptyState();
+                }
+                
+                showToast('Komponen berhasil dihapus!');
+            }
+        }
+
+        function updatePreview() {
+            const previewContent = document.getElementById('preview-content');
+            
+            if (websiteComponents.length === 0) {
+                previewContent.innerHTML = `
+                    <div class="text-center text-gray-400 py-12">
+                        <div class="text-4xl mb-4">🖥️</div>
+                        <p class="text-sm">Preview akan muncul di sini</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="space-y-0">';
+            
+            websiteComponents.forEach(component => {
+                const template = componentTemplates[component.type];
+                let componentHTML = template.html;
+                
+                // Replace placeholders with actual values
+                Object.keys(component.fields).forEach(fieldKey => {
+                    const placeholder = `[${fieldKey.toUpperCase()}]`;
+                    componentHTML = componentHTML.replace(new RegExp(placeholder, 'g'), component.fields[fieldKey]);
+                });
+                
+                html += componentHTML;
+            });
+            
+            html += '</div>';
+            previewContent.innerHTML = html;
+        }
+
+        function updateComponentCount() {
+            document.getElementById('component-count').textContent = websiteComponents.length;
+        }
+
+        function hideEmptyState() {
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('website-components').classList.remove('hidden');
+        }
+
+        function showEmptyState() {
+            document.getElementById('empty-state').classList.remove('hidden');
+            document.getElementById('website-components').classList.add('hidden');
+        }
+
+        function clearAll() {
+            if (websiteComponents.length === 0) {
+                showToast('Tidak ada komponen untuk dihapus!');
+                return;
+            }
+            
+            if (confirm('Apakah Anda yakin ingin menghapus semua komponen?')) {
+                websiteComponents = [];
+                document.getElementById('website-components').innerHTML = '';
+                updatePreview();
+                updateComponentCount();
+                showEmptyState();
+                showToast('Semua komponen berhasil dihapus!');
+            }
+        }
+
+        function loadTemplate() {
+            if (websiteComponents.length > 0) {
+                if (!confirm('Ini akan mengganti semua komponen yang ada. Lanjutkan?')) {
+                    return;
+                }
+            }
+            
+            clearAll();
+            
+            // Load basic template
+            const templateComponents = ['header', 'navigation', 'hero', 'about', 'news', 'contact', 'footer'];
+            
+            templateComponents.forEach((componentType, index) => {
+                setTimeout(() => {
+                    addComponent(componentType);
+                }, index * 200);
+            });
+            
+            showToast('Template berhasil dimuat!');
+        }
+
+        function previewWebsite() {
+            if (websiteComponents.length === 0) {
+                showToast('Tambahkan komponen terlebih dahulu!');
+                return;
+            }
+            
+            const fullHTML = generateFullHTML();
+            const newWindow = window.open('', '_blank');
+            newWindow.document.write(fullHTML);
+            newWindow.document.close();
+        }
+
+        function exportHTML() {
+            if (websiteComponents.length === 0) {
+                showToast('Tambahkan komponen terlebih dahulu!');
+                return;
+            }
+            
+            const fullHTML = generateFullHTML();
+            const blob = new Blob([fullHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'website-sekolah.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('Website berhasil diekspor!');
+            updateLastSaved();
+        }
+
+        function generateFullHTML() {
+            let html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Sekolah</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .container { max-width: 1200px; }
+    </style>
+</head>
+<body>
+`;
+            
+            websiteComponents.forEach(component => {
+                const template = componentTemplates[component.type];
+                let componentHTML = template.html;
+                
+                Object.keys(component.fields).forEach(fieldKey => {
+                    const placeholder = `[${fieldKey.toUpperCase()}]`;
+                    componentHTML = componentHTML.replace(new RegExp(placeholder, 'g'), component.fields[fieldKey]);
+                });
+                
+                html += componentHTML + '\n';
+            });
+            
+            html += `
+    <script>
+        // Prevent form submissions from navigating
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    alert('Terima kasih! Pesan Anda telah dikirim.');
+                });
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98a2d8acc7b0fd89',t:'MTc1OTcyOTQ2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>`;
+            
+            return html;
+        }
+
+        function refreshPreview() {
+            updatePreview();
+            showToast('Preview berhasil diperbarui!');
+        }
+
+        function toggleResponsive() {
+            const previewContent = document.getElementById('preview-content');
+            previewContent.classList.toggle('max-w-sm');
+            previewContent.classList.toggle('mx-auto');
+            showToast('Mode responsive diubah!');
+        }
+
+        function saveProgress() {
+            const data = {
+                components: websiteComponents,
+                timestamp: new Date().toISOString()
+            };
+            
+            localStorage.setItem('website-builder-progress', JSON.stringify(data));
+            updateLastSaved();
+            showToast('Progress berhasil disimpan!');
+        }
+
+        function updateLastSaved() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('id-ID');
+            document.getElementById('last-saved').textContent = `Terakhir disimpan: ${timeString}`;
+        }
+
+        function closeTutorial() {
+            document.getElementById('tutorial-panel').style.display = 'none';
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('success-toast');
+            const messageElement = document.getElementById('toast-message');
+            
+            messageElement.textContent = message;
+            toast.classList.remove('hidden');
+            toast.classList.add('success-animation');
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+                toast.classList.remove('success-animation');
+            }, 3000);
+        }
+
+        // Load saved progress on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const saved = localStorage.getItem('website-builder-progress');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.components && data.components.length > 0) {
+                        websiteComponents = data.components;
+                        componentCounter = Math.max(...websiteComponents.map(c => parseInt(c.id.split('-')[1])));
+                        
+                        websiteComponents.forEach(component => {
+                            renderComponent(component);
+                        });
+                        
+                        updatePreview();
+                        updateComponentCount();
+                        hideEmptyState();
+                        
+                        const date = new Date(data.timestamp);
+                        document.getElementById('last-saved').textContent = `Terakhir disimpan: ${date.toLocaleTimeString('id-ID')}`;
+                    }
+                } catch (e) {
+                    console.error('Error loading saved progress:', e);
+                }
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('edit-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        saveProgress();
+                        break;
+                    case 'e':
+                        e.preventDefault();
+                        exportHTML();
+                        break;
+                    case 'p':
+                        e.preventDefault();
+                        previewWebsite();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
