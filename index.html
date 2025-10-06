@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Drag & Drop Builder</title>
+    <title>Drag & Drop Materi Informatika SMP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -12,203 +12,344 @@
         
         .drag-item {
             cursor: grab;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            user-select: none;
         }
         
         .drag-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         }
         
         .drag-item.dragging {
-            opacity: 0.5;
-            transform: rotate(5deg);
+            opacity: 0.6;
+            transform: rotate(5deg) scale(1.1);
+            z-index: 1000;
         }
         
         .drop-zone {
-            min-height: 200px;
-            border: 2px dashed #ccc;
+            min-height: 120px;
+            border: 3px dashed #d1d5db;
             transition: all 0.3s ease;
+            position: relative;
         }
         
         .drop-zone.drag-over {
-            border-color: #3b82f6;
-            background-color: #eff6ff;
+            border-color: #10b981;
+            background-color: #ecfdf5;
             border-style: solid;
+            transform: scale(1.02);
+        }
+        
+        .drop-zone.correct {
+            border-color: #10b981;
+            background-color: #d1fae5;
+            animation: correctPulse 0.6s ease-out;
+        }
+        
+        .drop-zone.incorrect {
+            border-color: #ef4444;
+            background-color: #fee2e2;
+            animation: shake 0.5s ease-out;
+        }
+        
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .item-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .score-animation {
+            animation: scoreUp 0.8s ease-out;
+        }
+        
+        @keyframes scoreUp {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); color: #10b981; }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
-<body class="bg-gray-100 p-4">
-    <div class="max-w-6xl mx-auto">
-        <h1 class="text-3xl font-bold text-center mb-8">🏫 Simple Website Builder</h1>
-        
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Left Panel - Components -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-bold mb-4">📦 Komponen</h2>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">🖥️ Belajar Informatika SMP</h1>
+            <p class="text-lg text-gray-600">Drag gambar ke kotak yang sesuai untuk belajar!</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div class="flex items-center space-x-4">
+                    <label class="text-lg font-semibold text-gray-700">Pilih Materi:</label>
+                    <select id="category-select" onchange="changeCategory()" 
+                            class="bg-blue-50 border-2 border-blue-200 rounded-lg px-4 py-2 text-lg font-medium focus:outline-none focus:border-blue-500">
+                        <option value="hardware">🔧 Hardware Komputer</option>
+                        <option value="software">💿 Software Komputer</option>
+                        <option value="network">🌐 Jaringan Komputer</option>
+                        <option value="algorithm">🧮 Algoritma & Pemrograman</option>
+                    </select>
+                </div>
                 
-                <div class="space-y-3">
-                    <div class="drag-item bg-blue-100 p-3 rounded-lg border" 
-                         draggable="true" 
-                         data-component="header">
-                        <div class="flex items-center space-x-2">
-                            <span class="text-xl">🏠</span>
-                            <span class="font-medium">Header</span>
-                        </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600" id="score">0</div>
+                        <div class="text-sm text-gray-600">Skor</div>
                     </div>
-                    
-                    <div class="drag-item bg-green-100 p-3 rounded-lg border" 
-                         draggable="true" 
-                         data-component="menu">
-                        <div class="flex items-center space-x-2">
-                            <span class="text-xl">📋</span>
-                            <span class="font-medium">Menu</span>
-                        </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600" id="total">0/0</div>
+                        <div class="text-sm text-gray-600">Progress</div>
                     </div>
+                    <button onclick="resetGame()" 
+                            class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                        🔄 Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-12 gap-6">
+            <!-- Left Panel - Drag Items -->
+            <div class="lg:col-span-4">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                        <span id="items-title">🔧 Komponen Hardware</span>
+                    </h2>
                     
-                    <div class="drag-item bg-purple-100 p-3 rounded-lg border" 
-                         draggable="true" 
-                         data-component="content">
-                        <div class="flex items-center space-x-2">
-                            <span class="text-xl">📄</span>
-                            <span class="font-medium">Konten</span>
-                        </div>
-                    </div>
-                    
-                    <div class="drag-item bg-yellow-100 p-3 rounded-lg border" 
-                         draggable="true" 
-                         data-component="footer">
-                        <div class="flex items-center space-x-2">
-                            <span class="text-xl">🔗</span>
-                            <span class="font-medium">Footer</span>
-                        </div>
+                    <div id="drag-items" class="grid grid-cols-2 gap-4">
+                        <!-- Items will be loaded here -->
                     </div>
                 </div>
             </div>
 
-            <!-- Middle Panel - Drop Zone -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold">🏗️ Area Website</h2>
+            <!-- Right Panel - Drop Zones -->
+            <div class="lg:col-span-8">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                        <span id="zones-title">🎯 Cocokkan dengan Kategori</span>
+                    </h2>
                     
-                    <!-- Plus Button with Dropdown -->
-                    <div class="relative">
-                        <button id="add-btn" onclick="toggleDropdown()" 
-                                class="bg-blue-500 hover:bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold transition-colors">
-                            +
-                        </button>
-                        
-                        <!-- Dropdown Menu -->
-                        <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-10">
-                            <div class="py-2">
-                                <button onclick="addComponentFromMenu('header')" 
-                                        class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2">
-                                    <span class="text-lg">🏠</span>
-                                    <span>Header</span>
-                                </button>
-                                <button onclick="addComponentFromMenu('menu')" 
-                                        class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2">
-                                    <span class="text-lg">📋</span>
-                                    <span>Menu</span>
-                                </button>
-                                <button onclick="addComponentFromMenu('content')" 
-                                        class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2">
-                                    <span class="text-lg">📄</span>
-                                    <span>Konten</span>
-                                </button>
-                                <button onclick="addComponentFromMenu('footer')" 
-                                        class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2">
-                                    <span class="text-lg">🔗</span>
-                                    <span>Footer</span>
-                                </button>
-                            </div>
-                        </div>
+                    <div id="drop-zones" class="grid md:grid-cols-2 gap-6">
+                        <!-- Drop zones will be loaded here -->
                     </div>
-                </div>
-                
-                <div id="drop-zone" class="drop-zone rounded-lg p-4">
-                    <div id="empty-message" class="text-center text-gray-400 py-8">
-                        <div class="text-4xl mb-2">📱</div>
-                        <p>Drag komponen atau klik tombol + di atas</p>
-                    </div>
-                    
-                    <div id="components-container" class="space-y-2 hidden">
-                        <!-- Components will be added here -->
-                    </div>
-                </div>
-                
-                <div class="mt-4 flex space-x-2">
-                    <button onclick="clearAll()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-                        🗑️ Hapus Semua
-                    </button>
-                    <button onclick="exportHTML()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                        💾 Export
-                    </button>
                 </div>
             </div>
+        </div>
 
-            <!-- Right Panel - Preview -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-bold mb-4">👁️ Preview</h2>
-                
-                <div id="preview" class="border rounded-lg p-4 min-h-64 bg-gray-50">
-                    <p class="text-gray-400 text-center py-8">Preview akan muncul di sini</p>
+        <!-- Instructions -->
+        <div class="mt-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+            <div class="flex items-start space-x-3">
+                <div class="text-2xl">💡</div>
+                <div>
+                    <h3 class="font-bold text-blue-800 mb-2">Cara Bermain:</h3>
+                    <ol class="text-blue-700 space-y-1">
+                        <li>1. Pilih kategori materi dari dropdown di atas</li>
+                        <li>2. Drag gambar dari panel kiri ke kotak yang sesuai di kanan</li>
+                        <li>3. Kotak akan berubah hijau jika benar, merah jika salah</li>
+                        <li>4. Kumpulkan skor sebanyak-banyaknya!</li>
+                    </ol>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        let components = [];
-        let componentCounter = 0;
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-8 max-w-md mx-4 text-center">
+            <div class="text-6xl mb-4">🎉</div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Selamat!</h3>
+            <p class="text-gray-600 mb-6">Kamu berhasil menyelesaikan semua soal dengan skor <span id="final-score" class="font-bold text-green-600"></span>!</p>
+            <div class="flex space-x-3 justify-center">
+                <button onclick="closeSuccessModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-lg">
+                    Tutup
+                </button>
+                <button onclick="resetGame(); closeSuccessModal();" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg">
+                    Main Lagi
+                </button>
+            </div>
+        </div>
+    </div>
 
-        // Component templates
-        const templates = {
-            header: {
-                name: 'Header',
-                html: '<header class="bg-blue-600 text-white p-4 text-center"><h1 class="text-2xl font-bold">Website Sekolah</h1></header>'
+    <script>
+        let currentCategory = 'hardware';
+        let score = 0;
+        let correctAnswers = 0;
+        let totalQuestions = 0;
+        let usedItems = new Set();
+
+        // Learning materials data
+        const materials = {
+            hardware: {
+                title: '🔧 Komponen Hardware',
+                items: [
+                    { id: 'cpu', name: 'CPU', icon: '🧠', target: 'processor' },
+                    { id: 'ram', name: 'RAM', icon: '💾', target: 'memory' },
+                    { id: 'hdd', name: 'Hard Disk', icon: '💿', target: 'storage' },
+                    { id: 'gpu', name: 'GPU', icon: '🎮', target: 'graphics' },
+                    { id: 'motherboard', name: 'Motherboard', icon: '🔌', target: 'mainboard' },
+                    { id: 'psu', name: 'Power Supply', icon: '⚡', target: 'power' }
+                ],
+                zones: [
+                    { id: 'processor', name: 'Processor', description: 'Otak komputer' },
+                    { id: 'memory', name: 'Memori', description: 'Penyimpanan sementara' },
+                    { id: 'storage', name: 'Penyimpanan', description: 'Penyimpanan permanen' },
+                    { id: 'graphics', name: 'Grafis', description: 'Pemroses gambar' },
+                    { id: 'mainboard', name: 'Papan Utama', description: 'Penghubung komponen' },
+                    { id: 'power', name: 'Daya', description: 'Sumber listrik' }
+                ]
             },
-            menu: {
-                name: 'Menu',
-                html: '<nav class="bg-gray-200 p-3"><div class="flex justify-center space-x-4"><a href="#" class="hover:text-blue-600">Beranda</a><a href="#" class="hover:text-blue-600">Tentang</a><a href="#" class="hover:text-blue-600">Kontak</a></div></nav>'
+            software: {
+                title: '💿 Jenis Software',
+                items: [
+                    { id: 'windows', name: 'Windows', icon: '🪟', target: 'os' },
+                    { id: 'word', name: 'MS Word', icon: '📝', target: 'office' },
+                    { id: 'photoshop', name: 'Photoshop', icon: '🎨', target: 'graphics' },
+                    { id: 'chrome', name: 'Chrome', icon: '🌐', target: 'browser' },
+                    { id: 'antivirus', name: 'Antivirus', icon: '🛡️', target: 'security' },
+                    { id: 'game', name: 'Game', icon: '🎮', target: 'entertainment' }
+                ],
+                zones: [
+                    { id: 'os', name: 'Sistem Operasi', description: 'Mengelola komputer' },
+                    { id: 'office', name: 'Aplikasi Perkantoran', description: 'Untuk bekerja' },
+                    { id: 'graphics', name: 'Aplikasi Grafis', description: 'Edit gambar/video' },
+                    { id: 'browser', name: 'Web Browser', description: 'Akses internet' },
+                    { id: 'security', name: 'Keamanan', description: 'Melindungi komputer' },
+                    { id: 'entertainment', name: 'Hiburan', description: 'Game dan multimedia' }
+                ]
             },
-            content: {
-                name: 'Konten',
-                html: '<main class="p-6"><h2 class="text-xl font-bold mb-4">Selamat Datang</h2><p class="text-gray-700">Ini adalah konten utama website sekolah kami.</p></main>'
+            network: {
+                title: '🌐 Komponen Jaringan',
+                items: [
+                    { id: 'router', name: 'Router', icon: '📡', target: 'routing' },
+                    { id: 'switch', name: 'Switch', icon: '🔀', target: 'switching' },
+                    { id: 'cable', name: 'Kabel UTP', icon: '🔌', target: 'transmission' },
+                    { id: 'wifi', name: 'WiFi', icon: '📶', target: 'wireless' },
+                    { id: 'server', name: 'Server', icon: '🖥️', target: 'hosting' },
+                    { id: 'modem', name: 'Modem', icon: '📞', target: 'connection' }
+                ],
+                zones: [
+                    { id: 'routing', name: 'Routing', description: 'Mengarahkan data' },
+                    { id: 'switching', name: 'Switching', description: 'Menghubungkan perangkat' },
+                    { id: 'transmission', name: 'Transmisi', description: 'Media pengiriman' },
+                    { id: 'wireless', name: 'Nirkabel', description: 'Tanpa kabel' },
+                    { id: 'hosting', name: 'Server', description: 'Penyedia layanan' },
+                    { id: 'connection', name: 'Koneksi', description: 'Akses internet' }
+                ]
             },
-            footer: {
-                name: 'Footer',
-                html: '<footer class="bg-gray-800 text-white p-4 text-center"><p>&copy; 2024 Website Sekolah</p></footer>'
+            algorithm: {
+                title: '🧮 Konsep Algoritma',
+                items: [
+                    { id: 'input', name: 'Input', icon: '📥', target: 'data-input' },
+                    { id: 'process', name: 'Proses', icon: '⚙️', target: 'processing' },
+                    { id: 'output', name: 'Output', icon: '📤', target: 'data-output' },
+                    { id: 'loop', name: 'Perulangan', icon: '🔄', target: 'iteration' },
+                    { id: 'condition', name: 'Kondisi', icon: '❓', target: 'decision' },
+                    { id: 'variable', name: 'Variabel', icon: '📊', target: 'storage' }
+                ],
+                zones: [
+                    { id: 'data-input', name: 'Input Data', description: 'Memasukkan data' },
+                    { id: 'processing', name: 'Pemrosesan', description: 'Mengolah data' },
+                    { id: 'data-output', name: 'Output Data', description: 'Hasil keluaran' },
+                    { id: 'iteration', name: 'Iterasi', description: 'Mengulang proses' },
+                    { id: 'decision', name: 'Keputusan', description: 'Percabangan logika' },
+                    { id: 'storage', name: 'Penyimpanan', description: 'Menyimpan nilai' }
+                ]
             }
         };
 
-        // Initialize drag and drop
+        // Initialize the game
         document.addEventListener('DOMContentLoaded', function() {
-            initDragAndDrop();
+            loadCategory(currentCategory);
         });
 
-        function initDragAndDrop() {
-            const dragItems = document.querySelectorAll('.drag-item');
-            const dropZone = document.getElementById('drop-zone');
+        function changeCategory() {
+            const select = document.getElementById('category-select');
+            currentCategory = select.value;
+            resetGame();
+            loadCategory(currentCategory);
+        }
 
-            // Add drag event listeners
-            dragItems.forEach(item => {
-                item.addEventListener('dragstart', handleDragStart);
-                item.addEventListener('dragend', handleDragEnd);
+        function loadCategory(category) {
+            const material = materials[category];
+            totalQuestions = material.items.length;
+            
+            // Update titles
+            document.getElementById('items-title').textContent = material.title;
+            
+            // Load drag items
+            loadDragItems(material.items);
+            
+            // Load drop zones
+            loadDropZones(material.zones);
+            
+            updateProgress();
+        }
+
+        function loadDragItems(items) {
+            const container = document.getElementById('drag-items');
+            container.innerHTML = '';
+            
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'drag-item bg-gradient-to-br from-blue-100 to-blue-200 p-4 rounded-xl border-2 border-blue-300 text-center cursor-grab hover:shadow-lg';
+                div.draggable = true;
+                div.dataset.itemId = item.id;
+                div.dataset.target = item.target;
+                
+                div.innerHTML = `
+                    <div class="item-icon">${item.icon}</div>
+                    <div class="font-semibold text-gray-800">${item.name}</div>
+                `;
+                
+                div.addEventListener('dragstart', handleDragStart);
+                div.addEventListener('dragend', handleDragEnd);
+                
+                container.appendChild(div);
             });
+        }
 
-            // Add drop event listeners
-            dropZone.addEventListener('dragover', handleDragOver);
-            dropZone.addEventListener('drop', handleDrop);
-            dropZone.addEventListener('dragenter', handleDragEnter);
-            dropZone.addEventListener('dragleave', handleDragLeave);
+        function loadDropZones(zones) {
+            const container = document.getElementById('drop-zones');
+            container.innerHTML = '';
+            
+            zones.forEach(zone => {
+                const div = document.createElement('div');
+                div.className = 'drop-zone bg-gray-50 rounded-xl p-6 text-center';
+                div.dataset.zoneId = zone.id;
+                
+                div.innerHTML = `
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">${zone.name}</h3>
+                    <p class="text-sm text-gray-600 mb-4">${zone.description}</p>
+                    <div class="text-4xl text-gray-300">📋</div>
+                `;
+                
+                div.addEventListener('dragover', handleDragOver);
+                div.addEventListener('drop', handleDrop);
+                div.addEventListener('dragenter', handleDragEnter);
+                div.addEventListener('dragleave', handleDragLeave);
+                
+                container.appendChild(div);
+            });
         }
 
         function handleDragStart(e) {
-            const componentType = e.target.dataset.component;
-            e.dataTransfer.setData('text/plain', componentType);
+            const itemId = e.target.dataset.itemId;
+            const target = e.target.dataset.target;
+            
+            e.dataTransfer.setData('text/plain', JSON.stringify({ itemId, target }));
             e.target.classList.add('dragging');
-            console.log('Dragging:', componentType);
         }
 
         function handleDragEnd(e) {
@@ -234,183 +375,116 @@
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
             
-            const componentType = e.dataTransfer.getData('text/plain');
-            console.log('Dropped:', componentType);
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            const zoneId = e.currentTarget.dataset.zoneId;
             
-            if (componentType && templates[componentType]) {
-                addComponent(componentType);
-            }
-        }
-
-        function addComponent(type) {
-            const template = templates[type];
-            const id = `component-${++componentCounter}`;
-            
-            const component = {
-                id: id,
-                type: type,
-                name: template.name,
-                html: template.html
-            };
-            
-            components.push(component);
-            renderComponent(component);
-            updatePreview();
-            hideEmptyMessage();
-            
-            console.log('Added component:', component);
-        }
-
-        function renderComponent(component) {
-            const container = document.getElementById('components-container');
-            const div = document.createElement('div');
-            div.className = 'bg-gray-100 p-3 rounded border flex justify-between items-center';
-            div.dataset.componentId = component.id;
-            
-            div.innerHTML = `
-                <span class="font-medium">${component.name}</span>
-                <button onclick="removeComponent('${component.id}')" 
-                        class="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600">
-                    ✕
-                </button>
-            `;
-            
-            container.appendChild(div);
-        }
-
-        function removeComponent(id) {
-            components = components.filter(c => c.id !== id);
-            
-            const element = document.querySelector(`[data-component-id="${id}"]`);
-            if (element) {
-                element.remove();
-            }
-            
-            updatePreview();
-            
-            if (components.length === 0) {
-                showEmptyMessage();
-            }
-        }
-
-        function updatePreview() {
-            const preview = document.getElementById('preview');
-            
-            if (components.length === 0) {
-                preview.innerHTML = '<p class="text-gray-400 text-center py-8">Preview akan muncul di sini</p>';
+            // Check if item already used
+            if (usedItems.has(data.itemId)) {
                 return;
             }
             
-            let html = '<div class="space-y-0">';
-            components.forEach(component => {
-                html += component.html;
-            });
-            html += '</div>';
-            
-            preview.innerHTML = html;
-        }
-
-        function hideEmptyMessage() {
-            document.getElementById('empty-message').classList.add('hidden');
-            document.getElementById('components-container').classList.remove('hidden');
-        }
-
-        function showEmptyMessage() {
-            document.getElementById('empty-message').classList.remove('hidden');
-            document.getElementById('components-container').classList.add('hidden');
-        }
-
-        function clearAll() {
-            if (components.length === 0) return;
-            
-            if (confirm('Hapus semua komponen?')) {
-                components = [];
-                document.getElementById('components-container').innerHTML = '';
-                updatePreview();
-                showEmptyMessage();
-            }
-        }
-
-        function exportHTML() {
-            if (components.length === 0) {
-                alert('Tambahkan komponen terlebih dahulu!');
-                return;
-            }
-            
-            let html = `<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website Sekolah</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body>
-`;
-            
-            components.forEach(component => {
-                html += component.html + '\n';
-            });
-            
-            html += '<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98a2f8177626fd89',t:'MTc1OTczMDc0OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body></html>';
-            
-            const blob = new Blob([html], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'website-sekolah.html';
-            a.click();
-            
-            URL.revokeObjectURL(url);
-            alert('Website berhasil diekspor!');
-        }
-
-        // Dropdown menu functions
-        function toggleDropdown() {
-            const dropdown = document.getElementById('dropdown-menu');
-            if (dropdown) {
-                dropdown.classList.toggle('hidden');
-                console.log('Dropdown toggled');
-            }
-        }
-
-        function addComponentFromMenu(type) {
-            console.log('Adding component from menu:', type);
-            if (templates[type]) {
-                addComponent(type);
-                // Close dropdown after adding
-                const dropdown = document.getElementById('dropdown-menu');
-                if (dropdown) {
-                    dropdown.classList.add('hidden');
+            // Check if correct
+            if (data.target === zoneId) {
+                // Correct answer
+                e.currentTarget.classList.add('correct');
+                e.currentTarget.innerHTML = `
+                    <h3 class="text-lg font-bold text-green-800 mb-2">✅ Benar!</h3>
+                    <p class="text-sm text-green-600 mb-4">Jawaban tepat!</p>
+                    <div class="text-4xl text-green-500">✅</div>
+                `;
+                
+                score += 10;
+                correctAnswers++;
+                usedItems.add(data.itemId);
+                
+                // Remove the dragged item
+                const draggedItem = document.querySelector(`[data-item-id="${data.itemId}"]`);
+                if (draggedItem) {
+                    draggedItem.style.opacity = '0.3';
+                    draggedItem.draggable = false;
+                    draggedItem.style.pointerEvents = 'none';
                 }
+                
+                updateScore();
+                updateProgress();
+                
+                // Check if game completed
+                if (correctAnswers === totalQuestions) {
+                    setTimeout(showSuccessModal, 1000);
+                }
+                
+                setTimeout(() => {
+                    e.currentTarget.classList.remove('correct');
+                }, 2000);
+                
             } else {
-                console.error('Template not found:', type);
+                // Incorrect answer
+                e.currentTarget.classList.add('incorrect');
+                
+                setTimeout(() => {
+                    e.currentTarget.classList.remove('incorrect');
+                }, 1000);
             }
         }
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            const dropdown = document.getElementById('dropdown-menu');
-            const addBtn = document.getElementById('add-btn');
+        function updateScore() {
+            const scoreElement = document.getElementById('score');
+            scoreElement.textContent = score;
+            scoreElement.classList.add('score-animation');
             
-            if (dropdown && addBtn) {
-                if (!dropdown.contains(e.target) && !addBtn.contains(e.target)) {
-                    dropdown.classList.add('hidden');
-                }
-            }
-        });
+            setTimeout(() => {
+                scoreElement.classList.remove('score-animation');
+            }, 800);
+        }
 
-        // Initialize dropdown functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const addBtn = document.getElementById('add-btn');
-            if (addBtn) {
-                addBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    toggleDropdown();
-                });
+        function updateProgress() {
+            document.getElementById('total').textContent = `${correctAnswers}/${totalQuestions}`;
+        }
+
+        function resetGame() {
+            score = 0;
+            correctAnswers = 0;
+            usedItems.clear();
+            
+            updateScore();
+            updateProgress();
+            
+            // Reset all drop zones
+            const dropZones = document.querySelectorAll('.drop-zone');
+            dropZones.forEach(zone => {
+                zone.classList.remove('correct', 'incorrect');
+                const zoneData = materials[currentCategory].zones.find(z => z.id === zone.dataset.zoneId);
+                zone.innerHTML = `
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">${zoneData.name}</h3>
+                    <p class="text-sm text-gray-600 mb-4">${zoneData.description}</p>
+                    <div class="text-4xl text-gray-300">📋</div>
+                `;
+            });
+            
+            // Reset all drag items
+            const dragItems = document.querySelectorAll('.drag-item');
+            dragItems.forEach(item => {
+                item.style.opacity = '1';
+                item.draggable = true;
+                item.style.pointerEvents = 'auto';
+            });
+        }
+
+        function showSuccessModal() {
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('success-modal').classList.remove('hidden');
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('success-modal').classList.add('hidden');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('success-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSuccessModal();
             }
         });
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98a2fc3a6655fd89',t:'MTc1OTczMDkxNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
